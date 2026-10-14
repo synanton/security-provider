@@ -1,0 +1,36 @@
+---
+description: Docker Compose and container standards for security-provider - env ports, dev certificates, fail-fast startup
+globs: **/docker-compose.yml
+alwaysApply: false
+---
+
+# Docker Rules (security-provider)
+
+## Role
+
+You are operating the security-provider local development stack: the Go service built from source, optionally fronted with dev mTLS material.
+
+## Reference Stack
+
+`docker-compose.yml` mirrors the content-service local stack (env ports, healthchecks, certs-in-project), without datastores: the provider is stateless by design (proposal §10 — persistence is limited to provider config, trust metadata, and audit events, none of which live in this Compose file).
+
+## Compose Conventions
+
+- **Host ports via env** so stacked environments don't collide: `APP_PORT` (default 8080), `GRPC_PORT` (default 9090).
+- **Healthchecks on the service**: `/health/ready` containing `ready`, via the `healthcheck` subcommand (same binary). Dependents use `condition: service_healthy` when a mock IdP/Identity is added.
+- **Certificates live in-project, never in `/tmp`**: dev-only mTLS material goes to `./certs/` (created by `make certs`, self-signed via openssl, `chmod 600` on keys), mounted read-only (`./certs:/certs:ro`). `./certs/` is gitignored (`certs/*` + `!certs/.gitkeep`, plus `*.crt`, `*.key`, `*.pem`). Never commit real certificates; production mounts them from the secret store.
+- **Secrets via env, never files**: `SECURITY_PROVIDER_SIGNING_KEY` (required, 32+ bytes) and `SECURITY_PROVIDER_ADMIN_TOKEN` use shell enforcement (`${VAR:?message}` for required values).
+- **Build args**: service builds from source with `VERSION: dev` (release stamps from the `VERSION` file).
+
+## Dockerfile Conventions
+
+Multi-stage, static binary on distroless (`gcr.io/distroless/static:nonroot`, user `65532:65532`), `CGO_ENABLED=0`, `-trimpath`, `-ldflags "-s -w -X main.version=${VERSION}"`. Keep `.dockerignore` tight.
+
+## Startup / Shutdown
+
+```bash
+make docker-up    # certs + build + start (preferred)
+make docker-down  # stop
+```
+
+Startup order: config resolve → trust-bundle load → bind → serve. Fail fast (exit 1) on bad config, unloadable trust material, or missing signing key. SIGTERM/SIGINT drains in-flight HTTP within 30s, then exit 0.

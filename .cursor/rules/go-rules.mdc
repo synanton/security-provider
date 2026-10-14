@@ -1,0 +1,85 @@
+---
+description: Go code generation standards for security-provider - hexagonal architecture, ports and adapters, authn adapters, testing conventions
+globs: **/*.go
+alwaysApply: false
+---
+
+# Go Generation Rules (security-provider)
+
+## Role
+
+You are a senior Go developer, obsessed with clean and fully tested code, working on the Synanton Security Provider — the authentication boundary and identity-context producer for the platform.
+
+## Design Reference
+
+The normative contracts are the Security Provider Service Proposal (`docs/proposal.md`), Synanton Design 1.29 (Identity — canonical principals, mappings, delegation), and Security 1.23 (authorization, classification, masking). Local spec: `docs/design.md`. Any behavior change must align with these documents first.
+
+## Authority Invariants (non-negotiable)
+
+- This service authenticates and resolves identity; it never authorizes. Authentication never implies authorization.
+- Canonical principals, external identity mappings, tenant membership, and delegation are owned by Identity 1.29. This service consumes them or fails closed.
+- The security context contains no masking directives, no representation selections, and no classification-derived output shaping. Any token smuggling them in is rejected.
+- Unsigned identity headers (`X-User-ID`, `X-Tenant-ID` as authority) are never trusted. The tenant is derived from the validated context; caller hints are cross-checked and rejected on mismatch.
+- Fail closed: invalid, expired, revoked, wrong-audience, ambiguous, or unavailable security state rejects protected operations. Outages never widen privileges.
+
+## Code Structure
+
+Hexagonal (ports and adapters). The project layout follows this pattern:
+
+```
+cmd/security-provider/  # server entrypoint + wiring only
+internal/
+  domain/               # pure auth types + sentinel errors (no I/O)
+  port/                 # interfaces (AuthenticationProvider, IdentityResolver, ContextIssuer)
+  authn/                # provider adapters (oidc, mtls, workload, apikey) + registry
+  identity/             # Identity 1.29 client + bounded cache + stub
+  context/              # security context build/sign/validate
+  policy/               # trust policy, local-verification policy
+  audit/                # structured audit events (allowlisted fields only)
+  adapter/
+    http/               # net/http REST adapter (std ServeMux, method patterns)
+    grpc/               # generated stubs (proto/security/v1) + server
+  config/               # YAML + SECURITY_PROVIDER_* env overrides, validated in Load()
+  observability/        # Prometheus metrics (sole source of metric names)
+  testcert/             # throwaway test certificates (never production trust)
+pkg/
+  middleware/           # importable consumer middleware (HTTP + gRPC) — joint-plan B1-3
+proto/security/v1/      # SecurityProviderService contract
+gen/security/v1/        # buf-generated stubs (never hand-edit)
+test/
+  integration/          # httptest-based mTLS end-to-end (build tag: integration, no Docker)
+```
+
+**Rules:**
+
+- `internal/domain/` must not import any package that performs I/O. If you reach for `net/http`, `crypto/tls` server behavior, or JWKS fetching inside domain, define a port instead.
+- Adapters depend on ports (interfaces), never the reverse. `cmd/` wires concrete adapters.
+- `pkg/middleware/` must stay dependency-light (stdlib + jwx + grpc only): content-service imports it and must not inherit the server's dependency tree.
+- Tenant checks belong on every resolution and validation path. Cross-tenant failures must be indistinguishable where the caller is unauthenticated, and explicit where the caller is authenticated but unauthorized.
+- Never log, metric-label, or echo raw credentials, complete tokens, or private keys.
+
+## Build System
+
+Standard Go toolchain plus `make` targets (`Makefile`):
+
+```bash
+make build             # version-stamped binary (VERSION file is the source of truth)
+make test              # unit tests with -race
+make test-integration  # mTLS end-to-end (httptest, no Docker)
+make vet               # go vet
+make proto             # regenerate gRPC stubs (only when .proto changes)
+```
+
+> **Do not run plain `go mod tidy` blindly.** Tidy prunes the dependencies of non-default build tags from `go.mod`. Add dependencies with explicit `go get module@version` instead, then verify `make test test-integration` still pass.
+
+## Guidelines
+
+When generating Go code:
+
+- Make the minimum change possible to complete the task.
+- Wrap errors with context (`fmt.Errorf("...: %w", err)`); use sentinel errors in `internal/domain` (`ErrPrincipalUnknown`, `ErrTenantDenied`, …) and compare with `errors.Is`.
+- Prefer table-driven tests for domain logic; use fake clocks, never `time.Sleep` in tests (white-box reset instead of sleeping through TTLs).
+- Always run with `-race` (unit and integration). Race detector must be clean.
+- Configuration is YAML + environment-first (`SECURITY_PROVIDER_*`), validated in `Load()`; fail fast with the cause on stderr before listeners bind.
+- Every new authentication provider implements `port.AuthenticationProvider`, adds config schema + validation, functional + security + resilience tests, an ADR, and a README row.
+- Keep comments concise. Never use comments for chain-of-thought; code must be self-explanatory with short doc comments on exported identifiers only.
