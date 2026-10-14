@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package security.v1;
+
+option go_package = "github.com/synanton/security-provider/gen/security/v1;securityv1";
+
+// SecurityProvider is the internal RPC surface of the Synanton Security
+// Provider. It is NOT a public API: any external exposure must go through
+// Platform API 1.32's contract, versioning, and compatibility CI.
+//
+// Field names mirror the canonical security context defined in
+// docs/design.md §7 so HTTP and gRPC consumers observe one shape.
+service SecurityProviderService {
+  // Authenticate validates a supported credential exchange and returns a
+  // signed security context for the resolved canonical principal.
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+
+  // ValidateContext validates a signed internal context at a trust
+  // boundary and returns its canonical claims.
+  rpc ValidateContext(ValidateContextRequest) returns (ValidateContextResponse);
+}
+
+// EvidenceKind names the supported authentication evidence kinds.
+// Must stay in sync with internal/domain EvidenceKind.
+enum EvidenceKind {
+  EVIDENCE_KIND_UNSPECIFIED = 0;
+  EVIDENCE_KIND_OIDC_ACCESS_TOKEN = 1;
+  EVIDENCE_KIND_MTLS_PEER = 2;
+  EVIDENCE_KIND_WORKLOAD_ASSERTION = 3;
+  EVIDENCE_KIND_API_CREDENTIAL = 4;
+}
+
+message AuthenticateRequest {
+  string provider_id = 5;
+  EvidenceKind evidence_kind = 1;  // Opaque credential material. mTLS peers are taken from the transport,
+  // not from this field: for EVIDENCE_KIND_MTLS_PEER the payload must be
+  // empty and the peer certificate is read from the TLS handshake.
+  // Never logged, never echoed back.
+  string credential = 2;
+  // Requested tenant scope. The tenant is validated against canonical
+  // Identity 1.29 state; an untrusted value here never grants access.
+  string requested_tenant_id = 3;
+  // Opaque caller trace/span correlation id.
+  string trace_id = 4;
+}
+
+message SecurityContextProto {
+  string principal_id = 1;
+  string principal_type = 2;
+  string tenant_id = 3;
+  string auth_method = 4;
+  string provider_id = 5;
+  string assurance_level = 6;
+  string authenticated_at = 7;
+  string expires_at = 8;
+  string initiated_by = 9;
+  string delegated_by = 10;
+  string trace_id = 11;
+}
+
+message AuthenticateResponse {
+  // Signed, short-lived security context (JWT). Present only on success.
+  string context_token = 1;
+  SecurityContextProto security_context = 2;
+}
+
+message ValidateContextRequest {
+  string context_token = 1;
+}
+
+message ValidateContextResponse {
+  bool valid = 1;
+  SecurityContextProto security_context = 2;
+  // Machine-readable reason when valid == false (e.g. EXPIRED,
+  // BAD_SIGNATURE, UNKNOWN_TENANT). Never carries credential material.
+  string reason_code = 3;
+}

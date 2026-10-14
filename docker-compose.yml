@@ -1,0 +1,32 @@
+# Local development stack: security-provider built from source.
+#
+# Usage:
+#   SECURITY_PROVIDER_SIGNING_KEY=<32+ bytes> make docker-up
+# The service serves HTTP (:8080) and gRPC (:9090). Dev mTLS material is
+# generated into ./certs/ by `make certs` (gitignored); production mounts
+# real certificates from the secret store.
+services:
+  security-provider:
+    build:
+      context: .
+      args:
+        VERSION: dev
+    environment:
+      SECURITY_PROVIDER_HTTP_ADDR: 0.0.0.0:8080
+      SECURITY_PROVIDER_GRPC_ADDR: 0.0.0.0:9090
+      SECURITY_PROVIDER_IDENTITY_MODE: stub
+      SECURITY_PROVIDER_SIGNING_KEY: ${SECURITY_PROVIDER_SIGNING_KEY:?set SECURITY_PROVIDER_SIGNING_KEY before up}
+      SECURITY_PROVIDER_ADMIN_TOKEN: ${SECURITY_PROVIDER_ADMIN_TOKEN:-}
+      SECURITY_PROVIDER_LOG_LEVEL: debug
+    volumes:
+      - ./certs:/certs:ro
+    ports:
+      # Host ports via env so stacked environments don't collide.
+      - "${APP_PORT:-8080}:8080"
+      - "${GRPC_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD", "/security-provider", "healthcheck", "--addr", "127.0.0.1:8080"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3

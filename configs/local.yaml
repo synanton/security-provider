@@ -1,0 +1,32 @@
+# Local configuration. Environment variables (SECURITY_PROVIDER_*) override
+# every key below. Never commit secrets here; production sets
+# SECURITY_PROVIDER_SIGNING_KEY and SECURITY_PROVIDER_ADMIN_TOKEN in the
+# environment and mounts certificates from the secret store.
+server:
+  http_addr: ":8080"
+  grpc_addr: ":9090"
+  context_ttl: 5m
+identity:
+  endpoint: "https://identity.internal:8443"
+  mode: stub
+  timeout: 2s
+  cache_ttl: 30s
+providers: []
+local_verification:
+  enabled: true
+  ttl_high_risk: 5m
+  ttl_standard: 15m
+  centralized_only_operations:
+    - "admin.*"
+    - "tenant.*"
+    - "delegation.activate"
+    - "delegation.extend"
+revocation:
+  slo_centralized: 60s
+  slo_local_high_risk: 5m
+  slo_local_standard: 15m
+  slo_mtls: 15m
+audit:
+  sink: "stdout"
+  redact_credentials: true
+log_level: info

@@ -1,0 +1,7 @@
+[book]
+title = "security-provider"
+authors = ["Synanton Platform Architecture · Security Working Group"]
+language = "en"
+
+[build]
+build-dir = "book"

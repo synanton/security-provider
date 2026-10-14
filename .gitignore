@@ -28,6 +28,17 @@ go.work.sum
 # env file
 .env
 
+# Binaries and build output
+bin/
+
+# Dev-only mTLS material (created by `make certs`, never committed).
+# The .gitkeep preserves the directory so compose mounts resolve.
+certs/*
+!certs/.gitkeep
+*.crt
+*.key
+*.pem
+
 # Editor/IDE
 # .idea/
 # .vscode/
