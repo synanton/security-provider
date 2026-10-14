@@ -28,7 +28,7 @@ identity:
 providers:
   - id: dev-ca
     type: mtls
-    trust_bundle: /tmp/ca.pem
+    trust_bundle: /etc/security-provider/trust/workload-ca.pem
     allowed_san_patterns: ["spiffe://synanton/*"]
     enabled: true
 `
