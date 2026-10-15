@@ -33,7 +33,7 @@ It exists so that every Synanton service — Platform API, Content Cache, AI Run
 | HTTP surface (authenticate, resolve, validate, providers, health) | ✅ | ✅ (contract tests) | ⬜ | ⬜ |
 | gRPC surface (`SecurityProviderService`) | ✅ | ✅ (bufconn) | ⬜ | ⬜ |
 | Consumer middleware (`pkg/middleware`, HTTP + gRPC) | ✅ | ✅ | ⬜ | ⬜ |
-| Content-service handshake (D.1, in consuming repo) | ⬜ | ⬜ | ⬜ | ⬜ |
+| Content-service handshake (D.1, in consuming repo) | ✅ | ✅ (content-service PR #14: mTLS transport + middleware validation + rejection battery, unit + testcontainers) | ⬜ | ⬜ |
 | Production Identity 1.29 endpoint (mode `http`) | ⬜ (stub default) | ⬜ | ⬜ | ⬜ |
 | Helm chart / production rollout | ⬜ | ⬜ | ⬜ | ⬜ |
 
