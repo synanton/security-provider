@@ -284,6 +284,73 @@ gRPC consumers use `middleware.UnaryServerInterceptor(verifier)` and `middleware
 
 ---
 
+## Security
+
+Security-provider verifies identities and, per the target design, issues
+tenant-bound access tokens. The shared model is in
+[synanton/platform docs/security/security-model.md](https://github.com/synanton/platform/blob/main/docs/security/security-model.md).
+
+### Current state (validator/facade)
+
+- **External OIDC validation.** Fetches provider JWKS; validates signature,
+  `iss`, `aud`, `exp`, `nbf`. — **Implemented**
+- **Identity resolution.** Calls Identity 1.29 for `PrincipalResolution`.
+  `requested_tenant_id` is an **untrusted hint**; the resolved tenant comes
+  from Identity 1.29. — **Implemented**
+- **Internal context token.** HS256, audience `synanton-internal`, TTL ≤ 15m,
+  service-to-service only. **Not client-holdable.** — **Implemented**
+- **Service-to-service auth.** mTLS/SPIFFE for service principals; constrained
+  API keys for lower-tier service access. — **Implemented**
+- **Audit.** `AuditSink` for authentication and resolution events. —
+  **Implemented**
+- **HTTP surface.** `/v1/authenticate`, `/v1/identity/resolve`,
+  `/v1/security-context/validate`, provider admin, health. **No
+  `/v1/auth/tenant`.** — **Current state**
+
+### Target state (issuer, #340)
+
+- **New signing domain.** Tenant-bound tokens use RS256/ES256 with a published
+  JWKS; rotation 90 days with 24-hour overlap; audience restricted to
+  SPA-facing services. **The HS256 internal key is never published.** —
+  **Design fixed** (Phase 1 not started)
+- **`TokenIssuer` port** and **`POST /v1/auth/tenant`** (ADR 0007). —
+  **Design fixed**
+- **Claim schema.** `iss`, `aud`, `sub`, `exp`, `nbf`, `jti`, `scope`,
+  `tenant_id`, `token_type=tenant_access`. — **Design fixed**
+- **Revocation.** `jti` denylist plus per-identity token version; membership
+  re-checked on refresh and on high-risk operations (writes, exports, admin).
+  — **Design fixed**
+- **Audit.** Issuance, selection, denial, and revocation events via
+  `AuditSink`. — **Design fixed**
+- **`TenantId` domain type and `TenantResolver`.** Reads `authorizedTenantIds`
+  from Identity 1.29; falls back to `[tenant_id]` when the set field is empty
+  (pre-#341). — **Design fixed**
+
+### Boundaries to preserve
+
+- `requested_tenant_id` remains an **untrusted hint** even when the service
+  issues tokens. The tenant that gets bound is the one validated against
+  Identity 1.29, not the one in the request.
+- The internal `context_token` (HS256) and the tenant-bound token
+  (RS256/ES256) are **separate signing domains** with separate key material.
+  The internal key is never exposed via JWKS.
+- Uniform 404 on selection outside the authorized set — the anti-oracle rule
+  applies at issuance, not only at request time.
+
+### What it does not own
+
+- The set-shaped identity model — Identity 1.29 [#341]
+- Data-layer enforcement — platform [#339]
+- Client-side token storage and per-tab isolation — UI [ADR 0006]
+
+### References
+
+- UI ADR 0007 — token claim schema and error matrix
+- [#340](https://github.com/synanton/platform/issues/340) — issuer ownership (Path A)
+- [#341](https://github.com/synanton/platform/issues/341) — Identity 1.29 set-shaped resolution
+- [#339](https://github.com/synanton/platform/issues/339) — data-layer enforcement
+- This repo's [#3](https://github.com/synanton/security-provider/issues/3) — repo-anchored issuance tracker
+
 ## Configuration Reference
 
 | Key | Default | Description |
