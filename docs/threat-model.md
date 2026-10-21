@@ -34,9 +34,10 @@ Derived from proposal §11.3; each control names its test:
 | Secret leakage in logs/metrics | Allowlisted audit fields; no credential in errors/labels | Review gate (no automated test asserts absence repo-wide — see residual risks) |
 | Admin abuse | Bearer gate, disabled-by-default, audit on every call | `TestProviderAdminGated` |
 
-## Residual risks (accepted as open work)
+## Residual risks and open work
 
 - `identity.mode: http` against the real Identity 1.29 API is unwired (stub is the documented interim); production resolution behavior is unproven.
+- Tenant-bound browser access-token issuance, asymmetric signing keys/JWKS, and its real-adapter acceptance are not implemented; current signed contexts are internal HS256 contexts. Track the issuer in [platform #340](https://github.com/synanton/platform/issues/340) and [security-provider #3](https://github.com/synanton/security-provider/issues/3). This threat model does not claim protection from an issuer that does not yet exist.
 - No repo-wide automated assertion that logs/metrics stay credential-free; relies on review + the audit field allowlist.
 - Timing side channels (tenant-existence oracles via latency) are out of PR gates by design, as in content-service.
 - Kill-process-mid-rotation and IdP-outage-mid-handshake harnesses do not exist yet (resilience backlog, Phase 4).

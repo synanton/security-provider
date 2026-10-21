@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-pre--alpha-orange.svg)](#status)
 
-`security-provider` validates authentication evidence (OIDC/OAuth 2.0 tokens, mTLS peer certificates, workload assertions, and constrained API credentials), resolves the result to a canonical Synanton principal through Identity 1.29, and produces a trusted, minimal **internal security context** for downstream services. Tenant-bound browser access-token issuance is a separate planned capability (#340; repo issue #3), not an implemented feature.
+`security-provider` validates authentication evidence (OIDC/OAuth 2.0 tokens, mTLS peer certificates, workload assertions, and constrained API credentials), resolves the result to a canonical Synanton principal through Identity 1.29, and produces a trusted, minimal **internal security context** for downstream services. Tenant-bound browser access-token issuance is a separate planned capability ([platform #340](https://github.com/synanton/platform/issues/340); [repo #3](https://github.com/synanton/security-provider/issues/3)), not an implemented feature.
 
 It exists so that every Synanton service — Platform API, Content Cache, AI Runtime, Eventing/Workflow, and domain services — does not reimplement authentication integrations, trust policy, or principal resolution.
 
@@ -34,12 +34,13 @@ It exists so that every Synanton service — Platform API, Content Cache, AI Run
 | gRPC surface (`SecurityProviderService`) | ✅ | ✅ (bufconn) | ⬜ | ⬜ |
 | Consumer middleware (`pkg/middleware`, HTTP + gRPC) | ✅ | ✅ | ⬜ | ⬜ |
 | Content-service handshake (D.1, in consuming repo) | ✅ | ✅ (content-service PR #14: mTLS transport + middleware validation + rejection battery, unit + testcontainers) | ⬜ | ⬜ |
+| Tenant-bound browser access-token issuer (asymmetric key/JWKS, `/v1/auth/tenant`; #340, repo #3) | ⬜ | ⬜ | ⬜ | ⬜ |
 | Production Identity 1.29 endpoint (mode `http`) | ⬜ (stub default) | ⬜ | ⬜ | ⬜ |
 | Helm chart / production rollout | ⬜ | ⬜ | ⬜ | ⬜ |
 
 `⬜` = not yet; nothing in this table is claimed before its evidence exists.
 
-Explicitly out of scope for v0.1.0: production Identity 1.29 wiring (blocked on the real resolution API — the stub is the documented interim per the joint-plan risk register), OAuth token exchange/delegation flows, Helm chart, dashboards. ⬜ rows above are deferred by decision, not pending by oversight.
+Explicitly out of scope for v0.1.0: tenant-bound browser token issuance (#340, repo #3); production Identity 1.29 wiring (blocked on the real resolution API — the stub is the documented interim per the joint-plan risk register); OAuth token exchange/delegation flows; Helm chart; dashboards. The issuer and production Identity rows remain outstanding, not implemented. Other ⬜ rows are deferred by decision, not pending by oversight.
 
 ---
 

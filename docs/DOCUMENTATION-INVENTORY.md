@@ -7,7 +7,7 @@ and ADRs.
 
 | Document | Classification | Disposition / action |
 |---|---|---|
-| [`../README.md`](../README.md) | Current / repository status and entry point | Clarified that current signed HS256 contexts are internal; tenant-bound browser token issuance is target work (#340, repo #3). Maturity table remains evidence-gated. |
+| [`../README.md`](../README.md) | Current / repository status and entry point | Clarifies current signed HS256 contexts are internal; tenant-bound browser token issuance is target work (#340, repo #3), and the maturity table now marks that issuer plus production Identity acceptance outstanding. |
 | [`index.md`](index.md), [`SUMMARY.md`](SUMMARY.md) | Current / docs navigation | Keep as mdBook entry and table of contents; README now links the inventory. |
 | [`design.md`](design.md), [`architecture.md`](architecture.md) | Current / implementation contract and architecture | Retain; use with the README and platform design references, not as proof of production rollout. |
 | [`IMPLEMENTATION.md`](IMPLEMENTATION.md) | Current / phase plan | Corrected stale gate language and recorded that Phase 1 code exists while formal B0/G0 and production gates remain open; marks issuer, identity, and platform-enforcement follow-ups. |
