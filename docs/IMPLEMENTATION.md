@@ -4,7 +4,7 @@ Phased delivery plan for `security-provider` (Track B of the Content Service & S
 
 ## Guiding principles
 
-- **Contracts before code.** No Phase 1 work proceeds until Platform API 1.32 and Eventing/Workflow 1.27 are frozen (gate G0, owned by Platform Architecture).
+- **Contracts before dependent integration.** New cross-plane work follows Platform API 1.32 and Eventing/Workflow 1.27 gates (G0, owned by Platform Architecture). The implemented Phase 1 workload-authentication slice predates the pending 1.27 freeze and is not evidence that the dependent platform integration gates have passed.
 - **Evidence before claims.** Every milestone exit requires a reproducible artifact (test, benchmark, runbook, signed report). The README maturity table is evidence-gated.
 - **Fail closed by default.** Negative tests are release gates, not optional coverage.
 - **Narrow first slice.** mTLS workload identity first; OIDC federation after B1 is stable.
@@ -19,9 +19,9 @@ Phased delivery plan for `security-provider` (Track B of the Content Service & S
 | B0-4 | Record §9.1 and §11.2 policies as ADRs | ADR-003 published |
 | B0-5 | Threat model review | `docs/threat-model.md` approved by security reviewer |
 
-Gate B0: all B0 tasks complete; G0 passed.
+Gate B0 requires all B0 tasks complete; **G0 has not passed**. The current Phase 1 code is an implemented pre-alpha slice, not evidence that the formal B0/G0 or production acceptance gates are complete.
 
-Status: B0-2, B0-3, B0-4 drafted as ADRs; B0-1, B0-5 in review.
+Status reviewed 2026-10-21: B0-2 and B0-3 have accepted ADRs; B0-4 remains proposed; B0-1 boundary sign-off and B0-5 threat-model approval remain open. Phase 1 implementation proceeded before formal gate closure; that chronology does not waive G0.
 
 ## Phase 1 — mTLS workload identity (implemented)
 
@@ -68,12 +68,12 @@ Gate B2: external identities resolve deterministically via Identity 1.29; invali
 | B4-3 | Independent security review | Signed approval |
 | B4-4 | Staged rollout | Rollout plan approved |
 
-## What to Do Today
+## Current follow-ups (reviewed 2026-10-21)
 
-1. Close B0-1 (boundary sign-off) and B0-5 (threat-model approval) — both block the Phase 1 gate review.
-2. Wire B2-5: point one OIDC provider at a dev IdP and run the staged rotation test.
-3. Drive milestone D.1 from the content-service side: import `pkg/middleware` in a test harness with an mTLS peer.
-4. Keep the README maturity table and this file in sync on every phase transition.
+1. Tenant-bound access-token issuance (asymmetric keys/JWKS, `/v1/auth/tenant`, revocation and audit) remains unimplemented; track it in [security-provider #3](https://github.com/synanton/security-provider/issues/3) and platform [#340](https://github.com/synanton/platform/issues/340).
+2. Production Identity 1.29 resolution and real-issuer acceptance remain open; the current Identity client default is the stub.
+3. Platform-wide tenant data-layer enforcement belongs to [platform #339](https://github.com/synanton/platform/issues/339), not this repository's demo/middleware tests.
+4. The README maturity table and this plan remain the status sources for their respective scope; update both when evidence changes.
 
 ## Per-phase done criteria
 

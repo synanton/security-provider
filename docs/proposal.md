@@ -3,12 +3,19 @@
 | | |
 |---|---|
 | Document type | Architecture proposal |
-| Status | Proposed — for architecture review |
+| Status | Historical proposal — superseded as implementation authority |
 | Version | 0.2 |
 | Date | 2026-10-14 |
 | Scope | Synanton Platform 1.0; Identity Design 1.29; Security Design 1.23; Platform API 1.32; Eventing/Workflow 1.27 |
 | Proposed service name | `security-provider` |
 | Suggested repository | `synanton/security-provider` (subject to repository naming conventions) |
+
+> **Superseded notice (2026-10-21):** This proposal is retained as design
+> history. The repository now exists and implements a pre-alpha validator and
+> internal-context provider; the current README, `docs/design.md`, accepted
+> ADRs, and platform Architecture 1.0 describe the actual ownership and status.
+> The sequencing and target-state language below is not a current implementation
+> status claim. See `docs/IMPLEMENTATION.md` for open gates and follow-ups.
 
 ## Contents
 
@@ -564,4 +571,3 @@ The success criterion is not merely that services can authenticate. It is that e
 - Synanton Design 1.30 — AI Runtime
 - Synanton Design 1.32 — Platform API
 - Synanton Design 1.33 — Kubernetes lifecycle
-
