@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-pre--alpha-orange.svg)](#status)
 
-`security-provider` validates authentication evidence (OIDC/OAuth 2.0 tokens, mTLS peer certificates, workload assertions, and constrained API credentials), resolves the result to a canonical Synanton principal through Identity 1.29, and produces a trusted, minimal security context for downstream services.
+`security-provider` validates authentication evidence (OIDC/OAuth 2.0 tokens, mTLS peer certificates, workload assertions, and constrained API credentials), resolves the result to a canonical Synanton principal through Identity 1.29, and produces a trusted, minimal **internal security context** for downstream services. Tenant-bound browser access-token issuance is a separate planned capability (#340; repo issue #3), not an implemented feature.
 
 It exists so that every Synanton service — Platform API, Content Cache, AI Runtime, Eventing/Workflow, and domain services — does not reimplement authentication integrations, trust policy, or principal resolution.
 
@@ -18,7 +18,7 @@ It exists so that every Synanton service — Platform API, Content Cache, AI Run
 
 **Pre-alpha.** Under active development. Not production-ready. See [`docs/IMPLEMENTATION.md`](docs/IMPLEMENTATION.md) for the phased plan and [`CONTRIBUTING.md`](CONTRIBUTING.md) for the acceptance gates.
 
-*State as of 2026-10-14 — Phase 1 (joint-plan B1) implemented: mTLS + workload + OIDC + API-key adapters, stub Identity 1.29 resolution with bounded cache, signed contexts, HTTP + gRPC surfaces, importable middleware; unit + httptest integration green.*
+*State reviewed 2026-10-21 — Phase 1 (joint-plan B1) is implemented: mTLS + workload + OIDC + API-key adapters, stub Identity 1.29 resolution with bounded cache, signed internal contexts, HTTP + gRPC surfaces, importable middleware; unit and HTTP integration tests are green. Content-service D.1 handshake evidence is linked in the table. This is not production identity/token-issuer acceptance.*
 
 ### Maturity
 
@@ -286,8 +286,9 @@ gRPC consumers use `middleware.UnaryServerInterceptor(verifier)` and `middleware
 
 ## Security
 
-Security-provider verifies identities and, per the target design, issues
-tenant-bound access tokens. The shared model is in
+Security-provider verifies identities and issues an internal signed context.
+Tenant-bound access-token issuance is the approved target tracked by #340 and
+security-provider #3; it is not implemented. The shared model is in
 [synanton/platform docs/security/security-model.md](https://github.com/synanton/platform/blob/main/docs/security/security-model.md).
 
 ### Current state (validator/facade)
@@ -307,7 +308,7 @@ tenant-bound access tokens. The shared model is in
   `/v1/security-context/validate`, provider admin, health. **No
   `/v1/auth/tenant`.** — **Current state**
 
-### Target state (issuer, #340)
+### Target state (tenant-bound issuer, #340; implementation not started)
 
 - **New signing domain.** Tenant-bound tokens use RS256/ES256 with a published
   JWKS; rotation 90 days with 24-hour overlap; audience restricted to
@@ -450,11 +451,17 @@ See [`docs/IMPLEMENTATION.md`](docs/IMPLEMENTATION.md) for the phased plan and t
 
 ## Documentation
 
-Developer documentation is built from `docs/` with mdBook on every merge:
+Developer documentation is built from `docs/` with mdBook on every merge.
+The original service proposal is retained as historical context; the
+implementation and accepted ADRs now govern what this repository actually
+provides:
 
 - **Using** — HTTP and gRPC API reference, operator runbook
-- **Architecture** — architecture overview, design document, threat model
+- **Architecture** — architecture overview, implementation design, threat model
 - **Developing** — implementation guide and plan, ADRs
+
+The [documentation inventory](docs/DOCUMENTATION-INVENTORY.md) records
+canonical sources, historical decisions, and current status dispositions.
 
 Key references:
 

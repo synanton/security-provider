@@ -31,6 +31,9 @@ go.work.sum
 # Binaries and build output
 bin/
 
+# mdBook output (built from docs/; source is under docs/)
+docs/book/
+
 # Dev-only mTLS material (created by `make certs`, never committed).
 # The .gitkeep preserves the directory so compose mounts resolve.
 certs/*

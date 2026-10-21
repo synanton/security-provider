@@ -1,4 +1,7 @@
-# Threat Model (draft — for security review, joint-plan B0-5)
+# Threat Model — draft; security reviewer approval pending (joint-plan B0-5)
+
+**Status reviewed:** 2026-10-21. This document is not approved; passing tests
+for listed controls does not close B0-5 or establish production readiness.
 
 Scope: the Security Provider service, its adapters, and `pkg/middleware` as consumed by content-service. Out of scope: Identity 1.29 internals, Security 1.23 enforcement, IdP/CA operations.
 

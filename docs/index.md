@@ -1,3 +1,3 @@
 # security-provider developer documentation
 
-Authentication boundary and identity-context producer for the Synanton platform. Start with the [proposal](proposal.md) (architecture authority), then the [design](design.md) (frozen implementation contracts), the [implementation plan](IMPLEMENTATION.md) (what to build next), and the [runbook](runbook.md) (how to operate it).
+Authentication boundary and identity-context producer for the Synanton platform. Start with the [implementation status](../README.md#status), then the [design](design.md) (current repository contracts), the [implementation plan](IMPLEMENTATION.md) (phase and follow-up status), and the [runbook](runbook.md). The [service proposal](proposal.md) is retained as historical design context and is superseded by the accepted ADRs, current repository design, and platform architecture for implementation status.

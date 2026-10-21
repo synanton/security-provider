@@ -2,6 +2,7 @@
 title = "security-provider"
 authors = ["Synanton Platform Architecture · Security Working Group"]
 language = "en"
+src = "."
 
 [build]
 build-dir = "book"
